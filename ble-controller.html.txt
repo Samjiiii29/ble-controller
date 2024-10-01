@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BLE Controller</title>
+</head>
+<body>
+  <h1>BLE Controller for ESP32</h1>
+  <button id="connect">Connect to BLE Device</button><br><br>
+  <button onclick="sendCommand('F')">Forward</button>
+  <button onclick="sendCommand('B')">Backward</button>
+  <button onclick="sendCommand('L')">Left</button>
+  <button onclick="sendCommand('R')">Right</button>
+  <button onclick="sendCommand('S')">Stop</button>
+
+  <script>
+    let bleDevice;
+    let bleCharacteristic;
+
+    document.getElementById('connect').addEventListener('click', async () => {
+      try {
+        bleDevice = await navigator.bluetooth.requestDevice({
+          filters: [{ services: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b'] }]
+        });
+        const server = await bleDevice.gatt.connect();
+        const service = await server.getPrimaryService('4fafc201-1fb5-459e-8fcc-c5c9c331914b');
+        bleCharacteristic = await service.getCharacteristic('beb5483e-36e1-4688-b7f5-ea07361b26a8');
+        alert('Connected to BLE device');
+      } catch (error) {
+        console.error(error);
+        alert('Connection failed');
+      }
+    });
+
+    function sendCommand(command) {
+      if (bleCharacteristic) {
+        let encoder = new TextEncoder();
+        bleCharacteristic.writeValue(encoder.encode(command));
+      } else {
+        alert('Not connected to BLE device');
+      }
+    }
+  </script>
+</body>
+</html>
